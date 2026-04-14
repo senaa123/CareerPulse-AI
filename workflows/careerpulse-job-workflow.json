@@ -1,0 +1,644 @@
+{
+  "name": "careerpulse-job-workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "tableId": "jobs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "job_url",
+              "fieldValue": "={{ $json.job_url }}"
+            },
+            {
+              "fieldId": "job_title",
+              "fieldValue": "={{ $json.job_title }}"
+            },
+            {
+              "fieldId": "company",
+              "fieldValue": "={{ $json.company }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.source }}"
+            },
+            {
+              "fieldId": "fit_score",
+              "fieldValue": "={{ $json.fit_score }}"
+            },
+            {
+              "fieldId": "summary",
+              "fieldValue": "={{ $json.summary }}"
+            },
+            {
+              "fieldId": "reason",
+              "fieldValue": "={{ $json.reason }}"
+            },
+            {
+              "fieldId": "recommendation",
+              "fieldValue": "={{ $json.recommendation }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        -112
+      ],
+      "id": "CREATE_A_ROW_NODE_ID",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASEAPI_CREDENTIAL_ID",
+          "name": "SUPABASEAPI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "SCHEDULE_TRIGGER_NODE_ID",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/sourabhbgp~linkedin-jobs-scraper/run-sync-get-dataset-items",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_APIFY_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"keywords\": \"\\\"AI Intern\\\" OR \\\"Machine Learning Intern\\\" OR \\\"ML Intern\\\" OR \\\"Data Science Intern\\\" OR \\\"Data Intern\\\" OR \\\"AI/ML Intern\\\" OR \\\"AI Engineer Intern\\\" OR \\\"Data Engineer Intern\\\" OR \\\"Data Analyst Intern\\\" OR \\\"Junior AI Engineer\\\" OR \\\"Junior Data Engineer\\\" OR \\\"Junior Data Scientist\\\" OR \\\"AI/ML Engineer\\\" OR \\\"Intern Software Engineer\\\"\",\n  \"location\": \"Sri Lanka\",\n  \"maxItems\": 10\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        176,
+        0
+      ],
+      "id": "HTTP_REQUEST_NODE_ID",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GROQ_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\nJSON.stringify({\n  model: \"openai/gpt-oss-120b\",\n  temperature: 0,\n  messages: [\n    {\n      role: \"system\",\n      content: \"You are a strict job screening assistant. Evaluate only from the provided candidate profile and job details. If a job description is provided, do not say information is insufficient. Return only valid JSON.\"\n    },\n    {\n      role: \"user\",\n      content: `Evaluate how well this ENTRY-LEVEL candidate matches the job.\\n\\nCandidate profile:\\n- BSc (Hons) in Information Technology specializing in Data Science (Undergraduate, CGPA: 3.3/4.0, 2023-2027) - SLIIT\\n- Strong academic foundation in Data Science, Statistics, Machine Learning, and AI\\n- Freelance project via Upwork: C# backend, SignalR, WebSockets, React.js (achieved 30% improvement in live data updates)\\n- Hands-on projects in AI/ML, deep learning, computer vision, backend APIs, data engineering, BI, and e-commerce\\n- Certifications: AI & ML (SLIIT), Microsoft Azure Data Fundamentals (DP-900)\\n\\nCandidate skills:\\nPython, Java, TypeScript, C#, C++, React.js, Spring Boot, .NET, Angular, PyQt6, Streamlit, OpenGL, FastAPI, REST APIs, WebSockets, SignalR, Node.js, JWT Authentication, Webhooks, API Integration, NumPy, Pandas, Scikit-learn, TensorFlow, Matplotlib, PyTorch, PyAudio, PySpark, TF-IDF, NLTK, faster-whisper, LangChain, LangGraph, RAG Pipelines, Hugging Face, Vector Search, LLMs, Generative AI, Prompt Engineering, Agentic Workflows, Tool Orchestration, Speech Recognition, OpenAI, Groq, Neural Networks, Deep Learning, LSTM, RNN, ANN, CNN, Convolutional Neural Networks, Recurrent Neural Networks, YOLO, Object Detection, Computer Vision, Sentiment Analysis, Text Classification, Model Retraining, MAE/RMSE, Multi-step Forecasting, Feature Engineering, Feature Selection, Statistical Analysis, Probability, Hypothesis Testing, Regression Analysis, Descriptive Statistics, Inferential Statistics, Data Distribution, Correlation, SQL, MongoDB, SQLite, ChromaDB, Qdrant, SSMS, Power BI, SSIS, SSAS, ETL, Star Schema, Data Warehousing, Dimensional Modeling, Fact & Dimension Tables, SQL Transformations, AWS (S3, EC2, Lambda), Azure (Blob Storage, Virtual Machines), Cloud Computing, Serverless Architecture, Cloud Storage, Docker, CI/CD, MS Fabric, GitHub, Git, Jupyter Notebook, Postman, Redux TK, Stripe, Real-time Communication, yfinance, Yahoo Finance API\\n\\nTarget roles:\\nAI/ML Intern, AI Engineer Intern, Data Intern, Data Science Intern, Computer Vision Intern, Data/ETL roles, Backend AI roles, Junior AI/Data/Backend roles\\n\\nScoring rules:\\n- fit_score must be a decimal from 0 to 1\\n- Treat the candidate as ENTRY-LEVEL\\n- Give a bonus if the role aligns with the candidate's degree in Data Science or IT\\n- Strongly penalize Senior, Lead, Principal, Architect, Manager, or roles requiring significant prior experience\\n- If the role is an internship or junior role and the tech stack overlaps well, score higher\\n- If the role is senior-level, score low even if some skills overlap\\n- Do not claim insufficient information when the description is present\\n\\nReturn JSON with exactly these keys:\\nfit_score, matched_skills, missing_skills, summary, reason, recommendation\\n\\nJob title: ${$json.job_title}\\nCompany: ${$json.company}\\nLocation: ${$json.location}\\nSource: ${$json.source}\\nJob URL: ${$json.job_url}\\nJob description:\\n${$json.description}`\n    }\n  ]\n})\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "AI_SCORE_JOB_NODE_ID",
+      "name": "AI Score Job"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "jobs",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "job_url",
+              "condition": "eq",
+              "keyValue": "={{ $json.job_url }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        240
+      ],
+      "id": "GET_MANY_ROWS_NODE_ID",
+      "name": "Get many rows",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASEAPI_CREDENTIAL_ID",
+          "name": "SUPABASEAPI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cc3c83db-4cce-4733-bed0-cd224da51233",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2512,
+        -48
+      ],
+      "id": "IF_NODE_ID",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "930d2242-a4ff-463f-85e2-c13c2de94d18",
+              "leftValue": "={{ $json.fit_score }}",
+              "rightValue": 75,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3008,
+        -48
+      ],
+      "id": "IF1_NODE_ID",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=High-fit job found\n\nRole: {{ $json.job_title }}\nCompany: {{ $json.company }}\nScore: {{ $json.fit_score }}\n\nSummary:\n{{ $json.summary }}\n\nRecommendation:\n{{ $json.recommendation }}\n\nLink:\n{{ $json.job_url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3232,
+        -96
+      ],
+      "id": "SEND_A_TEXT_MESSAGE_NODE_ID",
+      "name": "Send a text message",
+      "webhookId": "SEND_A_TEXT_MESSAGE_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAMAPI_CREDENTIAL_ID",
+          "name": "TELEGRAMAPI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL_ADDRESS",
+        "subject": "CareerPulse AI: High-fit job found",
+        "emailType": "text",
+        "message": "=High-fit job found\n\nRole: {{ $json.job_title }}\nCompany: {{ $json.company }}\nScore: {{ $json.fit_score }}\n\nSummary:\n{{ $json.summary }}\n\nRecommendation:\n{{ $json.recommendation }}\n\nLink:\n{{ $json.job_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3360,
+        128
+      ],
+      "id": "SEND_A_MESSAGE_NODE_ID",
+      "name": "Send a message",
+      "webhookId": "SEND_A_MESSAGE_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GMAILOAUTH2_CREDENTIAL_ID",
+          "name": "GMAILOAUTH2_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2128,
+        -176
+      ],
+      "id": "MERGE_NODE_ID",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1616,
+        0
+      ],
+      "id": "LOOP_OVER_ITEMS_NODE_ID",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2080,
+        496
+      ],
+      "id": "NO_OPERATION,_DO_NOTHING_NODE_ID",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $json.choices[0].message.content;\n\nconst cleaned = raw\n  .replace(/^```json\\s*/i, \"\")\n  .replace(/^```\\s*/i, \"\")\n  .replace(/\\s*```$/i, \"\")\n  .trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (error) {\n  return {\n    json: {\n      parse_error: true,\n      raw_output: raw,\n      cleaned_output: cleaned,\n      error_message: error.message\n    }\n  };\n}\n\nconst job = $('Add Description').item.json;\nconst rawScore = Number(parsed.fit_score);\nconst normalizedScore = rawScore <= 1 ? rawScore * 100 : rawScore;\n\nreturn {\n  json: {\n    job_url: job.job_url,\n    job_title: job.job_title,\n    company: job.company,\n    source: job.source,\n    location: job.location,\n    description: job.description,\n    fit_score: Math.round(normalizedScore),\n    matched_skills: parsed.matched_skills || [],\n    missing_skills: parsed.missing_skills || [],\n    summary: parsed.summary || \"\",\n    reason: parsed.reason || \"\",\n    recommendation: parsed.recommendation || \"\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        0
+      ],
+      "id": "CODE_IN_JAVASCRIPT_NODE_ID",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    job_url: $json.job_url || $json.jobUrl || $json.url || \"\",\n    job_title: $json.job_title || $json.title || \"\",\n    company: $json.company || $json.companyName || \"\",\n    source: \"linkedin\",\n    location: $json.location || \"\",\n    description: $json.description || $json.jobDescription || \"\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        0
+      ],
+      "id": "NORMALIZE_NODE_ID",
+      "name": "Normalize"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst levelKeywords = [\n  \"intern\",\n  \"junior\",\n  \"trainee\",\n  \"entry level\"\n];\n\nconst domainKeywords = [\n  \"ai\",\n  \"ml\",\n  \"machine learning\",\n  \"artificial intelligence\",\n  \"data\",\n  \"data science\",\n  \"data engineer\",\n  \"software engineer\",\n  \"cloud\",\n  \"python\",\n  \"backend\"\n];\n\nconst badKeywords = [\n  \n  \"lead\",\n  \"senior\",\n  \"principal\",\n  \"manager\",\n  \"director\",\n  \"marketing\",\n  \"sales\",\n  \"designer\",\n  \"recruiter\",\n  \"accountant\",\n  \"hr\"\n];\n\nreturn items.filter(item => {\n  const title = (item.json.job_title || \"\").toLowerCase().replace(/[^a-z0-9\\s/.-]/g, \" \");\n\n  const hasLevel = levelKeywords.some(k => title.includes(k));\n  const hasDomain = domainKeywords.some(k => title.includes(k));\n  const hasBad = badKeywords.some(k => title.includes(k));\n\n  return hasLevel && hasDomain && !hasBad;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "JOB_FILTER_NODE_ID",
+      "name": "Job filter"
+    },
+    {
+      "parameters": {
+        "url": "={{$json.job_url}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        0
+      ],
+      "id": "HTTP_REQUEST1_NODE_ID",
+      "name": "HTTP Request1",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const html = $json.data || \"\";\nlet description = \"\";\n\nconst match = html.match(\n  /<div class=\"show-more-less-html__markup[^>]*>([\\s\\S]*?)<\\/div>\\s*<button class=\"show-more-less-html__button/i\n);\n\nif (match) {\n  description = match[1]\n    .replace(/<br\\s*\\/?>/gi, \"\\n\")\n    .replace(/<\\/strong>/gi, \"\\n\")\n    .replace(/<strong>/gi, \"\")\n    .replace(/<\\/li>/gi, \"\\n\")\n    .replace(/<li>/gi, \"\u2022 \")\n    .replace(/<\\/ul>/gi, \"\\n\")\n    .replace(/<\\/p>/gi, \"\\n\")\n    .replace(/<[^>]+>/g, \" \")\n    .replace(/&nbsp;/g, \" \")\n    .replace(/&amp;/g, \"&\")\n    .replace(/\\n{2,}/g, \"\\n\")\n    .replace(/[ \\t]{2,}/g, \" \")\n    .replace(/\\n +/g, \"\\n\")\n    .trim();\n}\n\nconst base = $('Job filter').item.json;\n\nreturn {\n  json: {\n    job_url: base.job_url,\n    job_title: base.job_title,\n    company: base.company,\n    source: base.source,\n    location: base.location,\n    description: description\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "ADD_DESCRIPTION_NODE_ID",
+      "name": "Add Description"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Score Job": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize": {
+      "main": [
+        [
+          {
+            "node": "Job filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job filter": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Add Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Description": {
+      "main": [
+        [
+          {
+            "node": "AI Score Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "WORKFLOW_VERSION_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "N8N_INSTANCE_ID"
+  },
+  "id": "WORKFLOW_ID",
+  "tags": []
+}
